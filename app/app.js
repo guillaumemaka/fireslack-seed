@@ -22,11 +22,50 @@ angular
       })
       .state('login', {
         url: '/login',
-        templateUrl: 'auth/login.html'
+        controller: 'AuthController as authCtrl',
+        templateUrl: 'auth/login.html',
+        resolve: {
+          requireNoAuth:function($state, Auth) {
+            return Auth.$requireAuth().then(
+              function(auth){
+                $state.go('home');
+            },function(error){
+                return;
+            });
+          }
+        }
       })
       .state('register', {
         url: '/register',
-        templateUrl: 'auth/register.html'
+        controller: 'AuthController as authCtrl',
+        templateUrl: 'auth/register.html',
+        resolve: {
+          requireNoAuth:function($state, Auth) {
+            return Auth.$requireAuth().then(
+              function(auth){
+                $state.go('home');
+            },function(error){
+                return;
+            });
+          }
+        }
+      })
+      .state('profile', {
+        url: '/profile',
+        controller: "ProfileController as profileCtrl",
+        templateUrl:'users/profile.html',
+        resolve: {
+          auth: function($state, Users, Auth){
+            return Auth.$requireAuth().catch(function(){
+                $state.go('home');
+            });
+          },
+          profile: function(Users, Auth){
+            return Auth.$requireAuth().then(function(auth){
+                return Users.getProfile(auth.uid).$loaded();
+            });
+          }
+        }
       });
 
     $urlRouterProvider.otherwise('/');
