@@ -6,12 +6,14 @@ Users.$inject = ['$firebaseArray', '$firebaseObject', 'FirebaseUrl'];
 function Users($firebaseArray, $firebaseObject, FirebaseUrl){
     var usersRef = new Firebase(FirebaseUrl + 'users');
     var users = $firebaseArray(usersRef);
+    var connectedRef = new Firebase(FirebaseUrl+'.info/connected');
 
     var Users = {
         getProfile: getProfile,
         getDisplayName: getDisplayName,
         all: users,
-        getGravatar: getGravatar
+        getGravatar: getGravatar,
+        setOnline: setOnline
     };
     return Users;
 
@@ -25,5 +27,18 @@ function Users($firebaseArray, $firebaseObject, FirebaseUrl){
 
     function getGravatar (uid) {
         return '//www.gravatar.com/avatar/' + users.$getRecord(uid).emailHash;
+    }
+
+    function setOnline (uid) {
+        var connected = $firebaseObject(connectedRef);
+        var online = $firebaseArray(usersRef.child(uid+'/online'));
+
+        connected.$watch(function (){
+            if(connected.$value === true){
+                online.$add(true).then(function(connectedRef){
+                    connectedRef.onDisconnect().remove();
+                });
+            }
+        });
     }
 }
